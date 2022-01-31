@@ -1,8 +1,83 @@
 import numpy as np
 import fractions, re
-from .. import utils
+from ..utils import get_pixel_config, get_audio_format, spec_stream
+
+from struct import Struct
+from collections import namedtuple
 
 # https://docs.microsoft.com/en-us/previous-versions//dd183376(v=vs.85)?redirectedfrom=MSDN
+
+
+class AvihStruct(Struct):
+    template = namedtuple(
+        "Avih",
+        (
+            "micro_sec_per_frame",
+            "max_bytes_per_sec",
+            "padding_granularity",
+            "flags",
+            "total_frames",
+            "initial_frames",
+            "streams",
+            "suggested_buffer_size",
+            "width",
+            "height",
+        ),
+        defaults=(0,) * 10,
+    )
+
+    flags_template = namedtuple(
+        "AvihFlags",
+        (
+            "copyrighted",
+            "has_index",
+            "is_interleaved",
+            "must_use_index",
+            "was_capture_file",
+        ),
+        defaults=(False,) * 5,
+    )
+    flags_masks = flags_template._make(
+        (
+            int("0x00020000", 0),
+            int("0x00000010", 0),
+            int("0x00000100", 0),
+            int("0x00000020", 0),
+            int("0x00010000", 0),
+        )
+    )
+
+    def __init__(self):
+        super().__init__("<10i")
+
+    def default(self):
+        return self.template()
+
+    def _unpack_flags(self, flags):
+        return self.template._make(*(bool(flags & mask) for mask in self.flags_masks))
+
+    def unpack(self, buffer):
+        data = self.template._make(super().unpack(buffer))
+        return data._replace(flags=self._unpack_flags(data.flags))
+
+    def unpack_from(self, buffer, offset=0):
+        data = self.template._make(super().unpack_from(buffer, offset))
+        return data._replace(flags=self._unpack_flags(data.flags))
+
+    def _pack_flags(self, flags):
+        return sum((mask if flag else 0 for flag, mask in zip(flags, self.flags_masks)))
+
+    def pack(self, avih_tuple):
+        return super().pack(
+            *avih_tuple._replace(flags=self._pack_flags(avih_tuple.flags))
+        )
+
+    def pack_into(self, buffer, offset, avih_tuple):
+        super().pack_into(
+            buffer,
+            offset,
+            *avih_tuple._replace(flags=self._pack_flags(avih_tuple.flags))
+        )
 
 
 def decode_avih(data, prev_chunk):
@@ -338,13 +413,13 @@ class AviReader:
             id = cnt[st_type]
             cnt[st_type] += 1
             if st_type == "v":
-                _, ncomp, dtype, _ = utils.get_pixel_config(hdr["pix_fmt"])
+                _, ncomp, dtype, _ = get_pixel_config(hdr["pix_fmt"])
                 shape = (hdr["height"], hdr["width"], ncomp)
             elif st_type == "a":
-                _, dtype = utils.get_audio_format(hdr["sample_fmt"])
+                _, dtype = get_audio_format(hdr["sample_fmt"])
                 shape = (hdr["channels"],)
             return {
-                "spec": utils.spec_stream(id, st_type),
+                "spec": spec_stream(id, st_type),
                 "shape": shape,
                 "dtype": dtype,
                 **hdr,
