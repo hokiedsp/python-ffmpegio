@@ -1,16 +1,21 @@
 `ffmpegio`: Media I/O with FFmpeg in Python
 ===================================================
 
-.. image:: https://img.shields.io/pypi/v/ffmpegio
+====== ============= ============= ================ ===============
+|pypi| |pypi-status| |pypi-pyvers| |github-license| |github-status|
+====== ============= ============= ================ ===============
+
+.. |pypi| image:: https://img.shields.io/pypi/v/ffmpegio
   :alt: PyPI
-.. image:: https://img.shields.io/pypi/status/ffmpegio
+.. |pypi-status| image:: https://img.shields.io/pypi/status/ffmpegio
   :alt: PyPI - Status
-.. image:: https://img.shields.io/pypi/pyversions/ffmpegio
+.. |pypi-pyvers| image:: https://img.shields.io/pypi/pyversions/ffmpegio
   :alt: PyPI - Python Version
-.. image:: https://img.shields.io/github/license/python-ffmpegio/python-ffmpegio
-  :alt: GitHub
-.. image:: https://img.shields.io/github/workflow/status/python-ffmpegio/python-ffmpegio/Run%20Tests
+.. |github-license| image:: https://img.shields.io/github/license/python-ffmpegio/python-ffmpegio
+  :alt: GitHub License
+.. |guthub-status| image:: https://img.shields.io/github/workflow/status/python-ffmpegio/python-ffmpegio/Run%20Tests
   :alt: GitHub Workflow Status
+
 
 Python `ffmpegio` package aims to bring the full capability of `FFmpeg <https://ffmpeg.org>`__
 to read, write, and manipulate multimedia data to Python. FFmpeg is an open-source cross-platform 
